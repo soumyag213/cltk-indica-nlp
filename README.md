@@ -1,34 +1,12 @@
 
 # API usage for syllabifier (Indic NLP)
-First set these resources on your machine
+Slight technicality that is needed to be straightened out, I've set the document resources according to the local git repository. Although I've uploaded the same on the github repo, I don't how to give it a path. The path for the resources, and the word to be syllabified altogether through a call from an instance of the class
 
 ```python
-INDIC_NLP_LIB_HOME="/home/soumya/indic_syllabifier"
-INDIC_NLP_RESOURCES="/home/soumya/Documents/indic_nlp3/indic_nlp_resources-master"
+x = Syllabifier("/home/soumya/Documents/indic_nlp3/indic_nlp_resources-master", 'नमस्ते', 'hi')
 
 ```
-This sets the path of the syllabifier
-
-```python
-import sys
-sys.path.append('{}/src'.format(INDIC_NLP_LIB_HOME))
-
-from indic_syl import indic_syll
-indic_syll.set_resources_path(INDIC_NLP_RESOURCES)
-
-```
-Initialize the Indic NLP Library, by loading it
-
-```python
-indic_syll.load()
-```
-Now, to call the syllabifying function itself 
-
-```python
-indic_syll.orthographic_syllabify('नमस्ते','hi')
-
-```
-
+The output is as follows:
 
 ```python
 /usr/bin/python3.4 /home/soumya/upython/sylapi.py
