@@ -51,192 +51,197 @@ PV_PROP_RANGES = dict(basic_type=[0, 6], vowel_length=[6, 8], vowel_strength=[8,
 
 PHONETIC_VECTOR_START_OFFSET = 6
 
-# Initializes and defines all variables which define the phonetic vector
-def scriptsinit():
-    # Define and call data for future use
-    global ALL_PHONETIC_DATA, ALL_PHONETIC_VECTORS, TAMIL_PHONETIC_DATA, TAMIL_PHONETIC_VECTORS, PHONETIC_VECTOR_LENGTH, PHONETIC_VECTOR_START_OFFSET
 
-    ALL_PHONETIC_DATA = pd.read_csv(get_resources_path() + '/script/all_script_phonetic_data.csv', encoding='utf-8')
-    TAMIL_PHONETIC_DATA = pd.read_csv(get_resources_path() + '/script/tamil_script_phonetic_data.csv', encoding='utf-8')
+class Syllabifier:
+    def __init__(self, resources_path, word, lang):
+        """
+            Initializes the Indic NLP library. Clients should call this method before using the library.
 
-    ALL_PHONETIC_VECTORS = ALL_PHONETIC_DATA.ix[:, PHONETIC_VECTOR_START_OFFSET:].as_matrix()
-    TAMIL_PHONETIC_VECTORS = TAMIL_PHONETIC_DATA.ix[:, PHONETIC_VECTOR_START_OFFSET:].as_matrix()
+            Any module requiring initialization should have a init() method,
+            to which a call must be made from this method
+        """
+        commoninit(resources_path)
+        scriptsinit()
+        orthographic_syllabify(word, lang)
 
-    PHONETIC_VECTOR_LENGTH = ALL_PHONETIC_VECTORS.shape[1]
+    # Initializes and defines all variables which define the phonetic vector
+    @staticmethod
+    def scriptsinit():
+        """Define and call data for future use"""
+        global ALL_PHONETIC_DATA, ALL_PHONETIC_VECTORS, TAMIL_PHONETIC_DATA, TAMIL_PHONETIC_VECTORS, PHONETIC_VECTOR_LENGTH, PHONETIC_VECTOR_START_OFFSET
 
+        ALL_PHONETIC_DATA = pd.read_csv(get_resources_path() + '/script/all_script_phonetic_data.csv', encoding='utf-8')
+        TAMIL_PHONETIC_DATA = pd.read_csv(get_resources_path() + '/script/tamil_script_phonetic_data.csv',
+                                          encoding='utf-8')
 
-def get_resources_path():
-    """
-        Get the path to the Indic NLP Resources directory
-    """
-    return INDIC_RESOURCES_PATH
+        ALL_PHONETIC_VECTORS = ALL_PHONETIC_DATA.ix[:, PHONETIC_VECTOR_START_OFFSET:].as_matrix()
+        TAMIL_PHONETIC_VECTORS = TAMIL_PHONETIC_DATA.ix[:, PHONETIC_VECTOR_START_OFFSET:].as_matrix()
 
+        PHONETIC_VECTOR_LENGTH = ALL_PHONETIC_VECTORS.shape[1]
 
-def set_resources_path(resources_path):
-    """
-        Set the path to the Indic NLP Resources directory
-    """
-    global INDIC_RESOURCES_PATH
-    INDIC_RESOURCES_PATH = resources_path
+    @staticmethod
+    def commoninit(resources_path):
+        """
+        Initialize the module. The following actions are performed:
 
+        - Checks if INDIC_RESOURCES_PATH variable is set. If not, checks if it can be initialized from
+            INDIC_RESOURCES_PATH environment variable. If that fails, an exception is raised
+        """
+        global INDIC_RESOURCES_PATH
+        set_resources_path(resources_path)
+        try:
+            if INDIC_RESOURCES_PATH == '':
+                INDIC_RESOURCES_PATH = os.environ['INDIC_RESOURCES_PATH']
+        except Exception as e:
+            raise IndicNlpException('Indic Resources Path not set')
 
-def commoninit():
-    """
-    Initialize the module. The following actions are performed:
-
-    - Checks if INDIC_RESOURCES_PATH variable is set. If not, checks if it can be initialized from
-        INDIC_RESOURCES_PATH environment variable. If that fails, an exception is raised
-    """
-    global INDIC_RESOURCES_PATH
-    try:
         if INDIC_RESOURCES_PATH == '':
-            INDIC_RESOURCES_PATH = os.environ['INDIC_RESOURCES_PATH']
-    except Exception as e:
-        raise IndicNlpException('Indic Resources Path not set')
+            raise IndicNlpException('Indic Resources Path not set')
 
-    if INDIC_RESOURCES_PATH == '':
-        raise IndicNlpException('Indic Resources Path not set')
+    @staticmethod
+    def set_resources_path(resources_path):
+        """
+            Set the path to the Indic NLP Resources directory
+        """
+        global INDIC_RESOURCES_PATH
+        INDIC_RESOURCES_PATH = resources_path
+
+    @staticmethod
+    def get_resources_path():
+        """ Get the path to the Indic NLP Resources directory"""
+
+        return INDIC_RESOURCES_PATH
+
+    class IndicNlpException(Exception):
+        def __init__(self, msg):
+            self.msg = msg
+
+        def __str__(self):
+            return repr(self.msg)
+
+    @staticmethod
+    def in_coordinated_range_offset(c_offset):
+        # Applicable to Brahmi derived Indic scripts
+        return COORDINATED_RANGE_START_INCLUSIVE <= c_offset <= COORDINATED_RANGE_END_INCLUSIVE
+
+    @staticmethod
+    def is_supported_language(lang):
+        return lang in SCRIPT_RANGES.keys()
+
+    @staticmethod
+    def invalid_vector():
+        return np.array([0] * PHONETIC_VECTOR_LENGTH)
+
+    @staticmethod
+    def get_offset(c, lang):
+        if not is_supported_language(lang):
+            raise IndicNlpException('Language {}  not supported'.format(lang))
+        # print ord(c)
+        # print li.SCRIPT_RANGES[lang][0]
+        return ord(c) - SCRIPT_RANGES[lang][0]
+
+    @staticmethod
+    def get_phonetic_info(lang):
+        if not is_supported_language(lang):
+            raise IndicNlpException('Language {}  not supported'.format(lang))
+        phonetic_data = ALL_PHONETIC_DATA if lang != LC_TA else TAMIL_PHONETIC_DATA
+        phonetic_vectors = ALL_PHONETIC_VECTORS if lang != LC_TA else TAMIL_PHONETIC_VECTORS
+
+        return phonetic_data, phonetic_vectors
+
+    @staticmethod
+    def get_phonetic_feature_vector(c, lang):
+        offset = get_offset(c, lang)
+        if not in_coordinated_range_offset(offset):
+            return invalid_vector()
+
+        phonetic_data, phonetic_vectors = get_phonetic_info(lang)
+
+        if phonetic_data.ix[offset, 'Valid Vector Representation'] == 0:
+            return invalid_vector()
+
+        return phonetic_vectors[offset]
+
+    @staticmethod
+    def get_property_vector(v, prop_name):
+        return v[PV_PROP_RANGES[prop_name][0]:PV_PROP_RANGES[prop_name][1]]
+
+    @staticmethod
+    def is_consonant(v):
+        """ Checks the property of the character selected against its phonetic vector
+        """
+        return v[PVIDX_BT_CONSONANT] == 1
+
+    @staticmethod
+    def is_misc(v):
+        return v[PVIDX_BT_MISC] == 1
+
+    @staticmethod
+    def is_valid(v):
+        return np.sum(v) > 0
+
+    @staticmethod
+    def is_vowel(v):
+        return v[PVIDX_BT_VOWEL] == 1
+
+    @staticmethod
+    def is_anusvaar(v):
+        return v[PVIDX_BT_ANUSVAAR] == 1
+
+    @staticmethod
+    def is_plosive(v):
+        return is_consonant(v) and get_property_vector(v, 'consonant_type')[0] == 1
+
+    @staticmethod
+    def is_dependent_vowel(v):
+        return is_vowel(v) and v[PVIDX_VSTAT_DEP] == 1
+
+    @staticmethod
+    def is_nukta(v):
+        return v[PVIDX_BT_NUKTA] == 1
 
 
-def load():
-    """
-        Initializes the Indic NLP library. Clients should call this method before using the library. 
+    def orthographic_syllabify(self, word, lang):
+        """Main syllablic function"""
+        p_vectors = [get_phonetic_feature_vector(c, lang) for c in word]
 
-        Any module requiring initialization should have a init() method, to which a call must be made from this method 
-    """
-    commoninit()
-    scriptsinit()
+        syllables = []
 
+        for i in range(len(word)):
+            v = p_vectors[i]
 
-class IndicNlpException(Exception):
-    def __init__(self, msg):
-        self.msg = msg
+            syllables.append(word[i])
 
-    def __str__(self):
-        return repr(self.msg)
-
-
-def in_coordinated_range_offset(c_offset):
-    # Applicable to Brahmi derived Indic scripts
-    return COORDINATED_RANGE_START_INCLUSIVE <= c_offset <= COORDINATED_RANGE_END_INCLUSIVE
-
-
-def is_supported_language(lang):
-    return lang in SCRIPT_RANGES.keys()
-
-
-def invalid_vector():
-    return np.array([0] * PHONETIC_VECTOR_LENGTH)
-
-
-def get_offset(c, lang):
-    if not is_supported_language(lang):
-        raise IndicNlpException('Language {}  not supported'.format(lang))
-    # print ord(c)
-    # print li.SCRIPT_RANGES[lang][0]
-    return ord(c) - SCRIPT_RANGES[lang][0]
-
-
-def get_phonetic_info(lang):
-    if not is_supported_language(lang):
-        raise IndicNlpException('Language {}  not supported'.format(lang))
-    phonetic_data = ALL_PHONETIC_DATA if lang != LC_TA else TAMIL_PHONETIC_DATA
-    phonetic_vectors = ALL_PHONETIC_VECTORS if lang != LC_TA else TAMIL_PHONETIC_VECTORS
-
-    return phonetic_data, phonetic_vectors
-
-
-def get_phonetic_feature_vector(c, lang):
-    offset = get_offset(c, lang)
-    if not in_coordinated_range_offset(offset):
-        return invalid_vector()
-
-    phonetic_data, phonetic_vectors = get_phonetic_info(lang)
-
-    if phonetic_data.ix[offset, 'Valid Vector Representation'] == 0:
-        return invalid_vector()
-
-    return phonetic_vectors[offset]
-
-
-def get_property_vector(v, prop_name):
-    return v[PV_PROP_RANGES[prop_name][0]:PV_PROP_RANGES[prop_name][1]]
-
-
-# Checks the property of the character selected against its phonetic vector
-def is_consonant(v):
-    return v[PVIDX_BT_CONSONANT] == 1
-
-
-def is_misc(v):
-    return v[PVIDX_BT_MISC] == 1
-
-
-def is_valid(v):
-    return np.sum(v) > 0
-
-
-def is_vowel(v):
-    return v[PVIDX_BT_VOWEL] == 1
-
-
-def is_anusvaar(v):
-    return v[PVIDX_BT_ANUSVAAR] == 1
-
-
-def is_plosive(v):
-    return is_consonant(v) and get_property_vector(v, 'consonant_type')[0] == 1
-
-
-def is_dependent_vowel(v):
-    return is_vowel(v) and v[PVIDX_VSTAT_DEP] == 1
-
-
-def is_nukta(v):
-    return v[PVIDX_BT_NUKTA] == 1
-
-
-# Main syllablic function
-def orthographic_syllabify(word, lang):
-    p_vectors = [get_phonetic_feature_vector(c, lang) for c in word]
-
-    syllables = []
-
-    for i in range(len(word)):
-        v = p_vectors[i]
-
-        syllables.append(word[i])
-
-        if i + 1 < len(word) and (not is_valid(p_vectors[i + 1]) or is_misc(p_vectors[i + 1])):
-            syllables.append(u' ')
-
-        elif not is_valid(v) or is_misc(v):
-            syllables.append(u' ')
-
-        elif is_vowel(v):
-
-            anu_nonplos = (i + 2 < len(word) and
-                           is_anusvaar(p_vectors[i + 1]) and
-                           not is_plosive(p_vectors[i + 2])
-                           )
-
-            anu_eow = (i + 2 == len(word) and
-                       is_anusvaar(p_vectors[i + 1]))
-
-            if not (anu_nonplos or anu_eow):
+            if i + 1 < len(word) and (not is_valid(p_vectors[i + 1]) or is_misc(p_vectors[i + 1])):
                 syllables.append(u' ')
 
-        elif i + 1 < len(word) and (is_consonant(v) or is_nukta(v)):
-            if is_consonant(p_vectors[i + 1]):
+            elif not is_valid(v) or is_misc(v):
                 syllables.append(u' ')
-            elif is_vowel(p_vectors[i + 1]) and not is_dependent_vowel(p_vectors[i + 1]):
-                syllables.append(u' ')
-            elif is_anusvaar(p_vectors[i + 1]):
-                anu_nonplos = (i + 2 < len(word) and not is_plosive(p_vectors[i + 2]))
 
-                anu_eow = i + 2 == len(word)
+            elif is_vowel(v):
+
+                anu_nonplos = (i + 2 < len(word) and
+                               is_anusvaar(p_vectors[i + 1]) and
+                               not is_plosive(p_vectors[i + 2])
+                               )
+
+                anu_eow = (i + 2 == len(word) and
+                           is_anusvaar(p_vectors[i + 1]))
 
                 if not (anu_nonplos or anu_eow):
                     syllables.append(u' ')
 
-    print(u''.join(syllables).strip().split(u' '))
+            elif i + 1 < len(word) and (is_consonant(v) or is_nukta(v)):
+                if is_consonant(p_vectors[i + 1]):
+                    syllables.append(u' ')
+                elif is_vowel(p_vectors[i + 1]) and not is_dependent_vowel(p_vectors[i + 1]):
+                    syllables.append(u' ')
+                elif is_anusvaar(p_vectors[i + 1]):
+                    anu_nonplos = (i + 2 < len(word) and not is_plosive(p_vectors[i + 2]))
+
+                    anu_eow = i + 2 == len(word)
+
+                    if not (anu_nonplos or anu_eow):
+                        syllables.append(u' ')
+
+        print(u''.join(syllables).strip().split(u' '))
