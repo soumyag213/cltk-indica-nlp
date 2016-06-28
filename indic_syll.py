@@ -1,8 +1,8 @@
-# Every phonetic of every language is given similar positions in the vectors. Therefore transliterations
-# happen when each offset is calculated relative to the ranges of the languages specified.
-# Every phonetic has a dedicated phonetic vector which describes all the facets of the character, whether it is
-# a vowel or a consonant whe ther it has a halanta, etc.
-
+"""Every phonetic of every language is given similar positions in the vectors. Therefore transliterations
+happen when each offset is calculated relative to the ranges of the languages specified.
+Every phonetic has a dedicated phonetic vector which describes all the facets of the character, whether it is
+a vowel or a consonant whe ther it has a halanta, etc.
+"""
 
 import numpy as np
 import pandas as pd
@@ -60,19 +60,19 @@ class Syllabifier:
             Any module requiring initialization should have a init() method,
             to which a call must be made from this method
         """
-        commoninit(resources_path)
-        scriptsinit()
-        orthographic_syllabify(word, lang)
 
-    @staticmethod
-    def scriptsinit():
+        self.commoninit(resources_path)
+        self.scriptsinit()
+        self.orthographic_syllabify(word, lang)
+
+    def scriptsinit(self):
         """Define and call data for future use
             Initializes and defines all variables which define the phonetic vector
         """
         global ALL_PHONETIC_DATA, ALL_PHONETIC_VECTORS, TAMIL_PHONETIC_DATA, TAMIL_PHONETIC_VECTORS, PHONETIC_VECTOR_LENGTH, PHONETIC_VECTOR_START_OFFSET
 
-        ALL_PHONETIC_DATA = pd.read_csv(get_resources_path() + '/script/all_script_phonetic_data.csv', encoding='utf-8')
-        TAMIL_PHONETIC_DATA = pd.read_csv(get_resources_path() + '/script/tamil_script_phonetic_data.csv',
+        ALL_PHONETIC_DATA = pd.read_csv(self.get_resources_path() + '/script/all_script_phonetic_data.csv', encoding='utf-8')
+        TAMIL_PHONETIC_DATA = pd.read_csv(self.get_resources_path() + '/script/tamil_script_phonetic_data.csv',
                                           encoding='utf-8')
 
         ALL_PHONETIC_VECTORS = ALL_PHONETIC_DATA.ix[:, PHONETIC_VECTOR_START_OFFSET:].as_matrix()
@@ -80,8 +80,8 @@ class Syllabifier:
 
         PHONETIC_VECTOR_LENGTH = ALL_PHONETIC_VECTORS.shape[1]
 
-    @staticmethod
-    def commoninit(resources_path):
+
+    def commoninit(self, resources_path):
         """
         Initialize the module. The following actions are performed:
 
@@ -89,7 +89,7 @@ class Syllabifier:
             INDIC_RESOURCES_PATH environment variable. If that fails, an exception is raised
         """
         global INDIC_RESOURCES_PATH
-        set_resources_path(resources_path)
+        self.set_resources_path(resources_path)
         try:
             if INDIC_RESOURCES_PATH == '':
                 INDIC_RESOURCES_PATH = os.environ['INDIC_RESOURCES_PATH']
@@ -133,33 +133,33 @@ class Syllabifier:
     def invalid_vector():
         return np.array([0] * PHONETIC_VECTOR_LENGTH)
 
-    @staticmethod
-    def get_offset(c, lang):
-        if not is_supported_language(lang):
+
+    def get_offset(self, c, lang):
+        if not self.is_supported_language(lang):
             raise IndicNlpException('Language {}  not supported'.format(lang))
         # print ord(c)
         # print li.SCRIPT_RANGES[lang][0]
         return ord(c) - SCRIPT_RANGES[lang][0]
 
-    @staticmethod
-    def get_phonetic_info(lang):
-        if not is_supported_language(lang):
+
+    def get_phonetic_info(self, lang):
+        if not self.is_supported_language(lang):
             raise IndicNlpException('Language {}  not supported'.format(lang))
         phonetic_data = ALL_PHONETIC_DATA if lang != LC_TA else TAMIL_PHONETIC_DATA
         phonetic_vectors = ALL_PHONETIC_VECTORS if lang != LC_TA else TAMIL_PHONETIC_VECTORS
 
         return phonetic_data, phonetic_vectors
 
-    @staticmethod
-    def get_phonetic_feature_vector(c, lang):
-        offset = get_offset(c, lang)
-        if not in_coordinated_range_offset(offset):
+
+    def get_phonetic_feature_vector(self, c, lang):
+        offset = self.get_offset(c, lang)
+        if not self.in_coordinated_range_offset(offset):
             return invalid_vector()
 
-        phonetic_data, phonetic_vectors = get_phonetic_info(lang)
+        phonetic_data, phonetic_vectors = self.get_phonetic_info(lang)
 
         if phonetic_data.ix[offset, 'Valid Vector Representation'] == 0:
-            return invalid_vector()
+            return self.invalid_vector()
 
         return phonetic_vectors[offset]
 
@@ -193,18 +193,17 @@ class Syllabifier:
     def is_plosive(v):
         return is_consonant(v) and get_property_vector(v, 'consonant_type')[0] == 1
 
-    @staticmethod
-    def is_dependent_vowel(v):
-        return is_vowel(v) and v[PVIDX_VSTAT_DEP] == 1
+
+    def is_dependent_vowel(self, v):
+        return self.is_vowel(v) and v[PVIDX_VSTAT_DEP] == 1
 
     @staticmethod
     def is_nukta(v):
         return v[PVIDX_BT_NUKTA] == 1
 
-
     def orthographic_syllabify(self, word, lang):
         """Main syllablic function"""
-        p_vectors = [get_phonetic_feature_vector(c, lang) for c in word]
+        p_vectors = [self.get_phonetic_feature_vector(c, lang) for c in word]
 
         syllables = []
 
@@ -213,17 +212,17 @@ class Syllabifier:
 
             syllables.append(word[i])
 
-            if i + 1 < len(word) and (not is_valid(p_vectors[i + 1]) or is_misc(p_vectors[i + 1])):
+            if i + 1 < len(word) and (not self.is_valid(p_vectors[i + 1]) or self.is_misc(p_vectors[i + 1])):
                 syllables.append(u' ')
 
-            elif not is_valid(v) or is_misc(v):
+            elif not self.is_valid(v) or self.is_misc(v):
                 syllables.append(u' ')
 
-            elif is_vowel(v):
+            elif self.is_vowel(v):
 
                 anu_nonplos = (i + 2 < len(word) and
-                               is_anusvaar(p_vectors[i + 1]) and
-                               not is_plosive(p_vectors[i + 2])
+                               self.is_anusvaar(p_vectors[i + 1]) and
+                               not self.is_plosive(p_vectors[i + 2])
                                )
 
                 anu_eow = (i + 2 == len(word) and
@@ -232,13 +231,13 @@ class Syllabifier:
                 if not (anu_nonplos or anu_eow):
                     syllables.append(u' ')
 
-            elif i + 1 < len(word) and (is_consonant(v) or is_nukta(v)):
-                if is_consonant(p_vectors[i + 1]):
+            elif i + 1 < len(word) and (self.is_consonant(v) or self.is_nukta(v)):
+                if self.is_consonant(p_vectors[i + 1]):
                     syllables.append(u' ')
-                elif is_vowel(p_vectors[i + 1]) and not is_dependent_vowel(p_vectors[i + 1]):
+                elif self.is_vowel(p_vectors[i + 1]) and not self.is_dependent_vowel(p_vectors[i + 1]):
                     syllables.append(u' ')
-                elif is_anusvaar(p_vectors[i + 1]):
-                    anu_nonplos = (i + 2 < len(word) and not is_plosive(p_vectors[i + 2]))
+                elif self.is_anusvaar(p_vectors[i + 1]):
+                    anu_nonplos = (i + 2 < len(word) and not self.is_plosive(p_vectors[i + 2]))
 
                     anu_eow = i + 2 == len(word)
 
@@ -246,3 +245,6 @@ class Syllabifier:
                         syllables.append(u' ')
 
         print(u''.join(syllables).strip().split(u' '))
+
+
+x = Syllabifier("/home/soumya/Documents/indic_nlp3/indic_nlp_resources-master", 'नमस्ते', 'hi')
