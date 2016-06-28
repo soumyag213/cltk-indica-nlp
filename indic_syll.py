@@ -71,8 +71,8 @@ class Syllabifier:
         """
         global ALL_PHONETIC_DATA, ALL_PHONETIC_VECTORS, TAMIL_PHONETIC_DATA, TAMIL_PHONETIC_VECTORS, PHONETIC_VECTOR_LENGTH, PHONETIC_VECTOR_START_OFFSET
 
-        ALL_PHONETIC_DATA = pd.read_csv(self.get_resources_path() + '/script/all_script_phonetic_data.csv', encoding='utf-8')
-        TAMIL_PHONETIC_DATA = pd.read_csv(self.get_resources_path() + '/script/tamil_script_phonetic_data.csv',
+        ALL_PHONETIC_DATA = pd.read_csv(self.get_resources_path() + '/src/all_script_phonetic_data.csv', encoding='utf-8')
+        TAMIL_PHONETIC_DATA = pd.read_csv(self.get_resources_path() + '/src/tamil_script_phonetic_data.csv',
                                           encoding='utf-8')
 
         ALL_PHONETIC_VECTORS = ALL_PHONETIC_DATA.ix[:, PHONETIC_VECTOR_START_OFFSET:].as_matrix()
