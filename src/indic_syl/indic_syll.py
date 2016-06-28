@@ -7,7 +7,7 @@
 import numpy as np
 import pandas as pd
 
-# Indexes into the phonetic vector
+"""Indexes into the phonetic vector"""
 PVIDX_BT_VOWEL = 0
 PVIDX_BT_CONSONANT = 1
 PVIDX_BT_NUKTA = 2
@@ -21,7 +21,7 @@ PVIDX_VSTAT_DEP = 12
 
 LC_TA = 'ta'
 
-# The phonetics of every script exist in the ranges of the dictionary mentioned below
+"""The phonetics of every script exist in the ranges of the dictionary mentioned below"""
 SCRIPT_RANGES = {
     'pa': [0x0a00, 0x0a7f],
     'gu': [0x0a80, 0x0aff],
@@ -64,10 +64,11 @@ class Syllabifier:
         scriptsinit()
         orthographic_syllabify(word, lang)
 
-    # Initializes and defines all variables which define the phonetic vector
     @staticmethod
     def scriptsinit():
-        """Define and call data for future use"""
+        """Define and call data for future use
+            Initializes and defines all variables which define the phonetic vector
+        """
         global ALL_PHONETIC_DATA, ALL_PHONETIC_VECTORS, TAMIL_PHONETIC_DATA, TAMIL_PHONETIC_VECTORS, PHONETIC_VECTOR_LENGTH, PHONETIC_VECTOR_START_OFFSET
 
         ALL_PHONETIC_DATA = pd.read_csv(get_resources_path() + '/script/all_script_phonetic_data.csv', encoding='utf-8')
@@ -121,7 +122,7 @@ class Syllabifier:
 
     @staticmethod
     def in_coordinated_range_offset(c_offset):
-        # Applicable to Brahmi derived Indic scripts
+        """Applicable to Brahmi derived Indic scripts"""
         return COORDINATED_RANGE_START_INCLUSIVE <= c_offset <= COORDINATED_RANGE_END_INCLUSIVE
 
     @staticmethod
