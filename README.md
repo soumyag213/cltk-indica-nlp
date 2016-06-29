@@ -1,7 +1,7 @@
 
 # API usage for syllabifier (Indic NLP)
 Slight technicality that is needed to be straightened out, I've set the document resources according to the local git repository. Although I've uploaded the same on the github repo (you can find both the sheets under src), I don't how to give it a path. 
-A choice is between the two sheets based on the language code chosen. This conditional path is set in the function ``` scriptsinit()``` 
+A choice is between the two sheets based on the language code chosen. This conditional path is set in the function ``` scripts()```
 
 
 The path for the resources, and the word to be syllabified altogether is defined through a call from the initialization of an object of the class
