@@ -5,8 +5,8 @@ a vowel or a consonant whe ther it has a halanta, etc.
 """
 
 import numpy as np
-import pandas as pd
-
+from indian_phonetic_data import *
+    #ALL_PHONETIC_DATA, TAMIL_PHONETIC_DATA, ALL_PHONETIC_VECTORS, TAMIL_PHONETIC_VECTORS, PHONETIC_VECTOR_LENGTH, PHONETIC_VECTOR_START_OFFSET
 """Indexes into the phonetic vector"""
 PVIDX_BT_VOWEL = 0
 PVIDX_BT_CONSONANT = 1
@@ -49,7 +49,7 @@ PV_PROP_RANGES = dict(basic_type=[0, 6], vowel_length=[6, 8], vowel_strength=[8,
                       nasalization=[27, 29], vowel_horizontal=[29, 32], vowel_vertical=[32, 36],
                       vowel_roundness=[36, 38])
 
-PHONETIC_VECTOR_START_OFFSET = 6
+#PHONETIC_VECTOR_START_OFFSET = 6
 
 
 class IndicNlpException(Exception):
@@ -69,23 +69,6 @@ class Syllabifier:
 
         self.lang = lang
 
-        self.all_phonetic_data, self.tamil_phonetic_data, self.all_phonetic_vectors, self.tamil_phonetic_vectors, self.phonetic_vector_length = self.get_lang_data()
-
-    def get_lang_data(self):
-        """Define and call data for future use. Initializes and defines all
-        variables which define the phonetic vectors.
-        """
-
-        all_phonetic_data = pd.read_csv('src/all_script_phonetic_data.csv', encoding='utf-8')
-        tamil_phonetic_data = pd.read_csv('src/tamil_script_phonetic_data.csv', encoding='utf-8')
-
-        all_phonetic_vectors = all_phonetic_data.ix[:, PHONETIC_VECTOR_START_OFFSET:].as_matrix()
-        tamil_phonetic_vectors = tamil_phonetic_data.ix[:, PHONETIC_VECTOR_START_OFFSET:].as_matrix()
-
-        phonetic_vector_length = all_phonetic_vectors.shape[1]
-
-        return all_phonetic_data, tamil_phonetic_data, all_phonetic_vectors, tamil_phonetic_vectors, phonetic_vector_length
-
     @staticmethod
     def in_coordinated_range_offset(c_offset):
         """Applicable to Brahmi derived Indic scripts"""
@@ -97,7 +80,7 @@ class Syllabifier:
 
     @staticmethod
     def invalid_vector():
-        return np.array([0] * self.phonetic_vector_length)
+        return np.array([0] * self.PHONETIC_VECTOR_LENGTH)
 
 
     def get_offset(self, c, lang):
@@ -111,8 +94,8 @@ class Syllabifier:
     def get_phonetic_info(self, lang):
         if not self.is_supported_language(lang):
             raise IndicNlpException('Language {}  not supported'.format(lang))
-        phonetic_data = self.all_phonetic_data if lang != LC_TA else self.tamil_phonetic_data
-        phonetic_vectors = self.all_phonetic_vectors if lang != LC_TA else self.tamil_phonetic_vectors
+        phonetic_data = ALL_PHONETIC_DATA if lang != LC_TA else self.tamil_phonetic_data
+        phonetic_vectors = ALL_PHONETIC_VECTORS if lang != LC_TA else self.tamil_phonetic_vectors
 
         return phonetic_data, phonetic_vectors
 
@@ -142,13 +125,15 @@ class Syllabifier:
     def is_misc(v):
         return v[PVIDX_BT_MISC] == 1
 
-    @staticmethod
-    def is_valid(v):
-        return np.sum(v) > 0
+
 
     @staticmethod
     def is_vowel(v):
         return v[PVIDX_BT_VOWEL] == 1
+
+    @staticmethod
+    def is_valid(v):
+        return sum(v) > 0
 
     # @staticmethod
     def is_anusvaar(self, v):
