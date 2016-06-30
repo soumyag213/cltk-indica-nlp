@@ -6,11 +6,14 @@ a vowel or a consonant whe ther it has a halanta, etc.
 Source: https://github.com/anoopkunchukuttan/indic_nlp_library/blob/master/src/indicnlp/script/indic_scripts.py
 """
 
+<<<<<<< HEAD
 __author__ = 'Anoop Kunchukuttan'
 __license__ = 'GPLv3'
 
 import os
 
+=======
+>>>>>>> 5addd2e6c25c9506b4edd2960b5ac287a9d6e95a
 try:
     import numpy as np
     import pandas as pd
@@ -76,6 +79,8 @@ class Syllabifier:
         assert self.lang_name in LANGUAGE_NAME_TO_CODE.keys(), 'Language not available'
         self.lang = LANGUAGE_NAME_TO_CODE[lang_name]
 
+        assert self.lang in SCRIPT_RANGES.keys()
+
         self.all_phonetic_data, self.tamil_phonetic_data, self.all_phonetic_vectors, self.tamil_phonetic_vectors, self.phonetic_vector_length = self.get_lang_data()
 
     def get_lang_data(self):
@@ -102,7 +107,6 @@ class Syllabifier:
     def in_coordinated_range_offset(c_offset):
         """Applicable to Brahmi derived Indic scripts"""
         return COORDINATED_RANGE_START_INCLUSIVE <= c_offset <= COORDINATED_RANGE_END_INCLUSIVE
-
 
     def invalid_vector(self):
         return np.array([0] * self.phonetic_vector_length)
