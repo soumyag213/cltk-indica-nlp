@@ -4,8 +4,12 @@ Every phonetic has a dedicated phonetic vector which describes all the facets of
 a vowel or a consonant whe ther it has a halanta, etc.
 """
 
-import numpy as np
-import pandas as pd
+try:
+    import numpy as np
+    import pandas as pd
+except ImportError:
+    print('"pandas" and "numpy" libraries not installed.')
+    raise
 
 """Indexes into the phonetic vector"""
 PVIDX_BT_VOWEL = 0
@@ -52,15 +56,6 @@ PV_PROP_RANGES = dict(basic_type=[0, 6], vowel_length=[6, 8], vowel_strength=[8,
 PHONETIC_VECTOR_START_OFFSET = 6
 
 
-class IndicNlpException(Exception):
-    def __init__(self, msg):
-        self.msg = msg
-
-    def __str__(self):
-        return repr(self.msg)
-
-
-
 class Syllabifier:
     """Class for syllabalizing Indian language words."""
 
@@ -69,6 +64,8 @@ class Syllabifier:
 
         self.lang = lang
 
+        assert self.lang in SCRIPT_RANGES.keys()
+
         self.all_phonetic_data, self.tamil_phonetic_data, self.all_phonetic_vectors, self.tamil_phonetic_vectors, self.phonetic_vector_length = self.get_lang_data()
 
     def get_lang_data(self):
@@ -76,8 +73,8 @@ class Syllabifier:
         variables which define the phonetic vectors.
         """
 
-        all_phonetic_data = pd.read_csv('src/all_script_phonetic_data.csv', encoding='utf-8')
-        tamil_phonetic_data = pd.read_csv('src/tamil_script_phonetic_data.csv', encoding='utf-8')
+        all_phonetic_data = pd.read_csv('all_script_phonetic_data.csv', encoding='utf-8')
+        tamil_phonetic_data = pd.read_csv('tamil_script_phonetic_data.csv', encoding='utf-8')
 
         all_phonetic_vectors = all_phonetic_data.ix[:, PHONETIC_VECTOR_START_OFFSET:].as_matrix()
         tamil_phonetic_vectors = tamil_phonetic_data.ix[:, PHONETIC_VECTOR_START_OFFSET:].as_matrix()
@@ -91,26 +88,13 @@ class Syllabifier:
         """Applicable to Brahmi derived Indic scripts"""
         return COORDINATED_RANGE_START_INCLUSIVE <= c_offset <= COORDINATED_RANGE_END_INCLUSIVE
 
-    @staticmethod
-    def is_supported_language(lang):
-        return lang in SCRIPT_RANGES.keys()
-
-    @staticmethod
-    def invalid_vector():
+    def invalid_vector(self):
         return np.array([0] * self.phonetic_vector_length)
 
-
     def get_offset(self, c, lang):
-        if not self.is_supported_language(lang):
-            raise IndicNlpException('Language {}  not supported'.format(lang))
-        # print ord(c)
-        # print li.SCRIPT_RANGES[lang][0]
         return ord(c) - SCRIPT_RANGES[lang][0]
 
-
     def get_phonetic_info(self, lang):
-        if not self.is_supported_language(lang):
-            raise IndicNlpException('Language {}  not supported'.format(lang))
         phonetic_data = self.all_phonetic_data if lang != LC_TA else self.tamil_phonetic_data
         phonetic_vectors = self.all_phonetic_vectors if lang != LC_TA else self.tamil_phonetic_vectors
 
