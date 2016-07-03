@@ -231,13 +231,3 @@ class Syllabifier:
 
         return (u''.join(syllables).strip().split(u' '))
 
-
-if __name__ == '__main__':
-    indian_syllabifier = Syllabifier('hindi')
-    indian_syllabifier.get_phonetic_feature_vector('न', 'hi')
-    print (indian_syllabifier.is_misc(v))
-
-    '''indian_syllabifier = Syllabifier('punjabi')
-        indian_syllabifier.orthographic_syllabify('ਹੈਲੋ')
-        indian_syllabifier = Syllabifier('bengali')
-        indian_syllabifier.orthographic_syllabify('হ্যালো')'''
