@@ -89,7 +89,7 @@ class Syllabifier:
         """
 
         root = os.path.expanduser('~')
-        csv_dir_path = os.path.join(root, 'cltk_data/sanskrit/model/sanskrit_models_cltk/phonetics')
+        csv_dir_path = os.path.join(root, '/home/soumya/Documents/indic_nlp3/indic_nlp_resources-master/src')
 
         all_phonetic_csv = os.path.join(csv_dir_path, 'all_script_phonetic_data.csv')
         all_phonetic_data = pd.read_csv(all_phonetic_csv, encoding='utf-8')
@@ -213,12 +213,14 @@ class Syllabifier:
                     if not (anu_nonplos or anu_eow):
                         syllables.append(u' ')
 
-        print(u''.join(syllables).strip().split(u' '))
+        return (u''.join(syllables).strip().split(u' '))
 
 
 if __name__ == '__main__':
     indian_syllabifier = Syllabifier('hindi')
-    indian_syllabifier.orthographic_syllabify('नमस्ते')
+    met = indian_syllabifier.orthographic_syllabify('नमस्ते')
+    print (met)
+
 
     indian_syllabifier = Syllabifier('punjabi')
     indian_syllabifier.orthographic_syllabify('ਹੈਲੋ')
