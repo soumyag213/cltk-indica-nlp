@@ -2,12 +2,9 @@
 happen when each offset is calculated relative to the ranges of the languages specified.
 Every phonetic has a dedicated phonetic vector which describes all the facets of the character, whether it is
 a vowel or a consonant whe ther it has a halanta, etc.
+
 Source: https://github.com/anoopkunchukuttan/indic_nlp_library/blob/master/src/indicnlp/script/indic_scripts.py
 """
-
-
-__author__ = 'Anoop Kunchukuttan'
-__license__ = 'GPLv3'
 
 import os
 
@@ -18,7 +15,11 @@ except ImportError:
     print('"pandas" and "numpy" libraries not installed.')
     raise
 
-"""Indexes into the phonetic vector"""
+__author__ = 'Anoop Kunchukuttan'
+__license__ = 'GPLv3'
+
+
+# Indexes into the phonetic vector
 PVIDX_BT_VOWEL = 0
 PVIDX_BT_CONSONANT = 1
 PVIDX_BT_NUKTA = 2
@@ -34,11 +35,11 @@ LC_TA = 'ta'
 
 LANGUAGE_NAME_TO_CODE = {'hindi': 'hi', 'sanskrit': 'sa', 'punjabi': 'pa', 'gujarati': 'gu', 'oriya': 'or',
                          'tamil': 'ta', 'telegu': 'te', 'kannada': 'kn', 'malayalam': 'ml', 'sinhalese': 'si',
-                         'marathi': 'mr', 'konkan': 'kK', 'nepali': 'ne', 'sindhi': 'sd', 'bengali': 'bn',
+                         'marathi': 'mr', 'konkan': 'kk', 'nepali': 'ne', 'sindhi': 'sd', 'bengali': 'bn',
                          'assamese': 'as'}
 
 
-"""The phonetics of every script exist in the ranges of the dictionary mentioned below"""
+# The phonetics of every script exist in the ranges of the dictionary mentioned below
 SCRIPT_RANGES = {
     'pa': [0x0a00, 0x0a7f],
     'gu': [0x0a80, 0x0aff],
@@ -50,7 +51,7 @@ SCRIPT_RANGES = {
     'si': [0x0d80, 0x0dff],
     'hi': [0x0900, 0x097f],
     'mr': [0x0900, 0x097f],
-    'kK': [0x0900, 0x097f],
+    'kk': [0x0900, 0x097f],
     'sa': [0x0900, 0x097f],
     'ne': [0x0900, 0x097f],
     'sd': [0x0900, 0x097f],
@@ -89,7 +90,7 @@ class Syllabifier:
         """
 
         root = os.path.expanduser('~')
-        csv_dir_path = os.path.join(root, '/home/soumya/Documents/indic_nlp3/indic_nlp_resources-master/src')
+        csv_dir_path = os.path.join(root, 'cltk_data/sanskrit/model/sanskrit_models_cltk/phonetics')
 
         all_phonetic_csv = os.path.join(csv_dir_path, 'all_script_phonetic_data.csv')
         all_phonetic_data = pd.read_csv(all_phonetic_csv, encoding='utf-8')
@@ -105,29 +106,33 @@ class Syllabifier:
 
     @staticmethod
     def in_coordinated_range_offset(c_offset):
-        """Applicable to Brahmi derived Indic scripts
-            Used to determine whether offset is of a  alphabetic character or not
+        """Applicable to Brahmi derived Indic scripts. Used to determine 
+        whether offset is of a  alphabetic character or not.
         """
         return COORDINATED_RANGE_START_INCLUSIVE <= c_offset <= COORDINATED_RANGE_END_INCLUSIVE
 
     def get_offset(self, c, lang):
-        '''Gets the offset; that is the relative position in the range of the specified language'''
+        """Gets the offset; that is the relative position in the range of the
+        specified language.
+        """
         return ord(c) - SCRIPT_RANGES[lang][0]
 
     def invalid_vector(self):
-        '''Returns an zero array of length 38'''
+        """Returns an zero array of length 38"""
         return np.array([0] * self.phonetic_vector_length)
 
     def get_phonetic_info(self, lang):
-        '''For a specified language (lang), it returns the matrix and the vector containing specifications of the characters'''
+        """For a specified language (lang), it returns the matrix and the vecto
+         containing specifications of the characters.
+         """
         phonetic_data = self.all_phonetic_data if lang != LC_TA else self.tamil_phonetic_data
         phonetic_vectors = self.all_phonetic_vectors if lang != LC_TA else self.tamil_phonetic_vectors
 
         return phonetic_data, phonetic_vectors
 
     def get_phonetic_feature_vector(self, c, lang):
-        '''For a given character in a language, it gathers all the information related to it
-          (eg: whether fricative, plosive,etc)'''
+        """For a given character in a language, it gathers all the information related to it
+          (eg: whether fricative, plosive,etc)"""
 
         offset = self.get_offset(c, lang)
         if not self.in_coordinated_range_offset(offset):
@@ -141,53 +146,61 @@ class Syllabifier:
         return phonetic_vectors[offset]
 
     def get_property_vector(self, v, prop_name):
-        '''Returns the part of the vector corresponding to the required property'''
+        """Returns the part of the vector corresponding to the required property"""
         return v[PV_PROP_RANGES[prop_name][0]:PV_PROP_RANGES[prop_name][1]]
 
 
     def is_consonant(self, v):
-        """ Checks the property of the character (of being a consonant) selected against its phonetic vector
+        """Checks the property of the character (of being a consonant)
+        selected against its phonetic vector.
         """
         return v[PVIDX_BT_CONSONANT] == 1
 
 
     def is_misc(self,v):
-        """ Checks the property of the character (of being miscellenous) selected against its phonetic vector
+        """Checks the property of the character (of being miscellenous)
+        selected against its phonetic vector.
         """
         return v[PVIDX_BT_MISC] == 1
 
     def is_valid(self, v):
-        '''Checks if the character entered is valid, by checking against the phonetic vector.
-        Atleast 1 of the 38 properties have to be satisfied for a valid vector'''
+        """Checks if the character entered is valid, by checking against the
+        phonetic vector. At least 1 of the 38 properties have to be
+        satisfied for a valid vector.
+        """
         return np.sum(v) > 0
 
     def is_vowel(self, v):
-        """ Checks the property of the character (of being a vowel) selected against its phonetic vector
+        """Checks the property of the character (of being a vowel) selected against its phonetic vector
             """
         return v[PVIDX_BT_VOWEL] == 1
 
     def is_anusvaar(self, v):
-        """ Checks the property of the character (of having an anusvaar) selected against its phonetic vector
-            """
+        """Checks the property of the character (of having an anusvaar)
+        selected against its phonetic vector.
+        """
         return v[PVIDX_BT_ANUSVAAR] == 1
 
     def is_plosive(self, v):
-        """ Checks the property of the character (of being a plosive character) selected against its phonetic vector
-            """
+        """Checks the property of the character (of being a plosive
+        character) selected against its phonetic vector.
+         """
         return self.is_consonant(v) and self.get_property_vector(v, 'consonant_type')[0] == 1
 
     def is_nukta(self,v):
-        """ Checks the property of the character (of having a nukta) selected against its phonetic vector
-            """
+        """Checks the property of the character (of having a nukta) selected
+        against its phonetic vector.
+        """
         return v[PVIDX_BT_NUKTA] == 1
 
     def is_dependent_vowel(self, v):
-        """ Checks the property of the character (if it is a dependent vowel) selected against its phonetic vector
-            """
+        """Checks the property of the character (if it is a dependent
+        vowel) selected against its phonetic vector.
+        """
         return self.is_vowel(v) and v[PVIDX_VSTAT_DEP] == 1
 
     def orthographic_syllabify(self, word):
-        """Main syllablic function"""
+        """Main syllablic function."""
         p_vectors = [self.get_phonetic_feature_vector(c, self.lang) for c in word]
 
         syllables = []
@@ -229,5 +242,5 @@ class Syllabifier:
                     if not (anu_nonplos or anu_eow):
                         syllables.append(u' ')
 
-        return (u''.join(syllables).strip().split(u' '))
+        return u''.join(syllables).strip().split(u' ')
 
