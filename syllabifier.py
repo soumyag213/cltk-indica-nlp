@@ -244,3 +244,9 @@ class Syllabifier:
 
         return u''.join(syllables).strip().split(u' ')
 
+
+if __name__ == '__main__':
+    correct = ['न', 'म', 'स्ते']
+    syllabifier = Syllabifier('hindi')
+    current = syllabifier.orthographic_syllabify('नमस्ते')
+    print(current == correct)
