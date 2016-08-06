@@ -1,5 +1,5 @@
 
-import codecs, sys, itertools,string,re
+import codecs, sys, string,re
 import morfessor
 
 SCRIPT_RANGES = {
@@ -73,7 +73,7 @@ class UnsupervisedMorphAnalyzer(MorphAnalyzerI):
         io = morfessor.MorfessorIO()
         self._morfessor_model=io.read_any_model(INDIC_RESOURCES_PATH+'/morph/morfessor/{}.model'.format(lang))
 
-        self._script_range_pat='^[{}-{}]+$'.format(unichr(SCRIPT_RANGES[lang][0]),unichr(SCRIPT_RANGES[lang][1]))
+        self._script_range_pat='^[{}-{}]+$'.format(chr(SCRIPT_RANGES[lang][0]),chr(SCRIPT_RANGES[lang][1]))
         self._script_check_re=re.compile(self._script_range_pat)
 
     def _contains_number(self,text):
@@ -148,14 +148,15 @@ if __name__ == '__main__':
         print ("Usage: python3 unsupervised_morph.py <infile> <outfile> <language> <indic_resources_path> [<add_marker>]")
         sys.exit(1)
 
-    language='hi'
-    INDIC_RESOURCES_PATH='home/soumya/cltk_data'
+    language=sys.argv[3]
+    INDIC_RESOURCES_PATH='/home/soumya/cltk_data'
+
 
     add_marker=False
 
-  '''if len(sys.argv)==6:
+    if len(sys.argv)==6:
         add_marker= True if sys.argv[5] == 'True' else False
-'''
+
     analyzer=UnsupervisedMorphAnalyzer(language,add_marker)
 
     with codecs.open(sys.argv[1],'r','utf-8') as ifile:
@@ -164,7 +165,7 @@ if __name__ == '__main__':
                 line=line.strip()
                 tokens=indian_punctuation_tokenize_regex(line)
                 morph_tokens=analyzer.morph_analyze_document(tokens)
-                ofile.write(string.join(morph_tokens,sep=' '))
+                ofile.write(' '.join(morph_tokens))
                 ofile.write('\n')
 
 
