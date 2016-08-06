@@ -1,6 +1,15 @@
 
-import codecs, sys, string,re
-import morfessor
+import codecs, sys, string, re
+
+try:
+    import morfessor
+except ImportError:
+    print('"morfessor" library is not installed.')
+    raise
+
+__author__ = 'Anoop Kunchukuttan'
+__license__ = 'GPLv3'
+
 
 SCRIPT_RANGES = {
     'pa': [0x0a00, 0x0a7f],
@@ -31,24 +40,6 @@ indian_punctuation_pattern = re.compile('(['+string.punctuation+'\u0964\u0965'+'
 def indian_punctuation_tokenize_regex(input_str):
     tok_str = indian_punctuation_pattern.sub(r' \1 ',input_str.replace('\t',' '))
     return re.sub(r'[ ]+',u' ',tok_str).strip(' ').split(' ')
-
-
-def common_init():
-    """
-    Initialize the module. The following actions are performed:
-
-    - Checks of INDIC_RESOURCES_PATH variable is set. If not, checks if it can beb initialized from
-        INDIC_RESOURCES_PATH environment variable. If that fails, an exception is raised
-    """
-    global INDIC_RESOURCES_PATH
-    try:
-        if INDIC_RESOURCES_PATH=='':
-            INDIC_RESOURCES_PATH=os.environ['INDIC_RESOURCES_PATH']
-    except Exception as e:
-        raise IndicNlpException('Indic Resources Path not set')
-
-    if INDIC_RESOURCES_PATH=='':
-        raise IndicNlpException('Indic Resources Path not set')
 
 class MorphAnalyzerI(object):
     """
@@ -144,8 +135,8 @@ class UnsupervisedMorphAnalyzer(MorphAnalyzerI):
 
 if __name__ == '__main__': 
 
-    if len(sys.argv)<4:
-        print ("Usage: python3 unsupervised_morph.py <infile> <outfile> <language> <indic_resources_path> [<add_marker>]")
+    if len(sys.argv)<3:
+        print ("Usage: python3 unsupervised_morph.py <infile> <outfile> <language> [<add_marker>]")
         sys.exit(1)
 
     language=sys.argv[3]
@@ -154,8 +145,8 @@ if __name__ == '__main__':
 
     add_marker=False
 
-    if len(sys.argv)==6:
-        add_marker= True if sys.argv[5] == 'True' else False
+    if len(sys.argv)==5:
+        add_marker= True if sys.argv[4] == 'True' else False
 
     analyzer=UnsupervisedMorphAnalyzer(language,add_marker)
 
