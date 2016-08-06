@@ -148,14 +148,14 @@ if __name__ == '__main__':
         print ("Usage: python3 unsupervised_morph.py <infile> <outfile> <language> <indic_resources_path> [<add_marker>]")
         sys.exit(1)
 
-    language=sys.argv[3]
-    INDIC_RESOURCES_PATH=sys.argv[4]
+    language='hi'
+    INDIC_RESOURCES_PATH='home/soumya/cltk_data'
 
     add_marker=False
 
-    if len(sys.argv)==6:
-        add_marker= True if sys.argv[5] == 'True' else False 
-
+  '''if len(sys.argv)==6:
+        add_marker= True if sys.argv[5] == 'True' else False
+'''
     analyzer=UnsupervisedMorphAnalyzer(language,add_marker)
 
     with codecs.open(sys.argv[1],'r','utf-8') as ifile:
