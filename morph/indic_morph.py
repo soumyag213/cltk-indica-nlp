@@ -135,18 +135,18 @@ class UnsupervisedMorphAnalyzer(MorphAnalyzerI):
 
 if __name__ == '__main__': 
 
-    if len(sys.argv)<3:
-        print ("Usage: python3 unsupervised_morph.py <infile> <outfile> <language> [<add_marker>]")
+    if len(sys.argv)<4:
+        print ("Usage: python3 unsupervised_morph.py <infile> <outfile> <language> <resources path>[<add_marker>]")
         sys.exit(1)
 
     language=sys.argv[3]
-    INDIC_RESOURCES_PATH='/home/soumya/cltk_data'
+    INDIC_RESOURCES_PATH=sys.argv[4]
 
 
     add_marker=False
 
-    if len(sys.argv)==5:
-        add_marker= True if sys.argv[4] == 'True' else False
+    if len(sys.argv)==6:
+        add_marker= True if sys.argv[5] == 'True' else False
 
     analyzer=UnsupervisedMorphAnalyzer(language,add_marker)
 
