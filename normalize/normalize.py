@@ -6,6 +6,12 @@ import sys, codecs, string, itertools, re
 __author__ = 'Anoop Kunchukuttan'
 __license__ = 'GPLv3'
 
+LANGUAGE_NAME_TO_CODE = {'hindi': 'hi', 'sanskrit': 'sa', 'punjabi': 'pa', 'gujarati': 'gu', 'oriya': 'or',
+                         'tamil': 'ta', 'telegu': 'te', 'kannada': 'kn', 'malayalam': 'ml', 'sinhalese': 'si',
+                         'marathi': 'mr', 'konkan': 'kk', 'nepali': 'ne', 'sindhi': 'sd', 'bengali': 'bn',
+'assamese': 'as'}
+
+
 class NormalizerI(object):
     """
     The normalizer classes do the following: 
@@ -476,6 +482,8 @@ class IndicNormalizerFactory(object):
             |language: language code
             |remove_nuktas: boolean, should the normalizer remove nukta characters 
         """
+        language = LANGUAGE_NAME_TO_CODE[language]
+
         normalizer=None
         if language in ['hi','mr','sa','kK','ne','sd']:
             normalizer=DevanagariNormalizer(remove_nuktas)
@@ -504,6 +512,8 @@ class IndicNormalizerFactory(object):
         """
         Is the language supported?
         """
+        language = LANGUAGE_NAME_TO_CODE[language]
+
         if language in ['hi','mr','sa','kK','ne',
                         'pa',
                         'gu',
@@ -520,29 +530,15 @@ class IndicNormalizerFactory(object):
 
 if __name__ == '__main__': 
 
-    if len(sys.argv)<4:
-        print ("Usage: python3 normalize.py <infile> <outfile> <language> [<replace_nukta(True,False>]")
-        sys.exit(1)
-
-    language=sys.argv[3]
+  factory=IndicNormalizerFactory()
+    
+    language='hindi'
     remove_nuktas=False
-    if len(sys.argv)>=5:
-        remove_nuktas=bool(sys.argv[4])
-
+    
     # create normalizer
-    factory=IndicNormalizerFactory()
     normalizer=factory.get_normalizer(language,remove_nuktas)
 
-    # DO normalization 
-    with codecs.open(sys.argv[1],'r','utf-8') as ifile:
-        with codecs.open(sys.argv[2],'w','utf-8') as ofile:
-            for line in ifile.readlines():
-                normalized_line=normalizer.normalize(line)
-                ofile.write(normalized_line)
-   
-    ## gather status about normalization 
-    #with codecs.open(sys.argv[1],'r','utf-8') as ifile:
-    #    normalizer=DevanagariNormalizer()
-    #    text=string.join(ifile.readlines(),sep='')
-    #    normalizer.get_char_stats(text)
-
+    input_string = "अलसस्य कुतो विद्या, अविद्यस्य:कुतो धनम् | अधनस्य कुतो मित्रम्, अमित्रस्य कुतःसुखम् ||"
+    print (input_string)
+    print (normalizer.normalize(input_string))
+                
