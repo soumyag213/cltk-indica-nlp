@@ -530,7 +530,7 @@ class IndicNormalizerFactory(object):
 
 if __name__ == '__main__': 
 
-  factory=IndicNormalizerFactory()
+    factory=IndicNormalizerFactory()
     
     language='hindi'
     remove_nuktas=False
