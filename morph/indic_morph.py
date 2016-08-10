@@ -10,6 +10,11 @@ except ImportError:
 __author__ = 'Anoop Kunchukuttan'
 __license__ = 'GPLv3'
 
+LANGUAGE_NAME_TO_CODE = {'hindi': 'hi', 'sanskrit': 'sa', 'punjabi': 'pa', 'gujarati': 'gu', 'oriya': 'or',
+                         'tamil': 'ta', 'telegu': 'te', 'kannada': 'kn', 'malayalam': 'ml', 'sinhalese': 'si',
+                         'marathi': 'mr', 'konkan': 'kk', 'nepali': 'ne', 'sindhi': 'sd', 'bengali': 'bn',
+'assamese': 'as'}
+
 
 SCRIPT_RANGES = {
     'pa': [0x0a00, 0x0a7f],
@@ -58,7 +63,7 @@ class UnsupervisedMorphAnalyzer(MorphAnalyzerI):
     """
 
     def __init__(self,lang,add_marker=False): 
-        self.lang=lang
+        self.lang= lang
         self.add_marker=add_marker
 
         io = morfessor.MorfessorIO()
@@ -135,28 +140,14 @@ class UnsupervisedMorphAnalyzer(MorphAnalyzerI):
 
 if __name__ == '__main__': 
 
-    if len(sys.argv)<4:
-        print ("Usage: python3 unsupervised_morph.py <infile> <outfile> <language> <resources path>[<add_marker>]")
-        sys.exit(1)
-
-    language=sys.argv[3]
-    INDIC_RESOURCES_PATH=sys.argv[4]
-
-
+    language='hindi'
+    INDIC_RESOURCES_PATH= '/home/soumya/cltk_data'
     add_marker=False
+    input_string = "प्रेमचन्द का जन्म ३१ जुलाई सन् १८८० को बनारस शहर।"
 
-    if len(sys.argv)==6:
-        add_marker= True if sys.argv[5] == 'True' else False
-
+    language = LANGUAGE_NAME_TO_CODE[language]
     analyzer=UnsupervisedMorphAnalyzer(language,add_marker)
-
-    with codecs.open(sys.argv[1],'r','utf-8') as ifile:
-        with codecs.open(sys.argv[2],'w','utf-8') as ofile:
-            for line in ifile.readlines():
-                line=line.strip()
-                tokens=indian_punctuation_tokenize_regex(line)
-                morph_tokens=analyzer.morph_analyze_document(tokens)
-                ofile.write(' '.join(morph_tokens))
-                ofile.write('\n')
+    morph_tokens = analyzer.morph_analyze_document(indian_punctuation_tokenize_regex(input_string))
+    print (morph_tokens)
 
 
