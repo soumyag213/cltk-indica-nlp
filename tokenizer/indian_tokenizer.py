@@ -27,10 +27,12 @@ def indian_punctuation_tokenize_regex(input_str):
     return re.sub(r'[ ]+',u' ',tok_str).strip(' ').split(' ')
 
 
+
 if __name__ == '__main__':
+
 
     triv1 = indian_punctuation_tokenize_regex("The quick brown fox jumps over the lazy dog")
     print(triv1)
 
-    triv2 = indian_punctuation_tokenize_regex("प्रेमचन्द का जन्म ३१ जुलाई सन् १८८० को बनारस शहर से चार मील दूर लमही गाँव में हुआ था।")
+    triv2 = indian_punctuation_tokenize_regex("प्रेमचन्द का जन्म ३१ जुलाई सन् १८८० को बनारस शहर।")
     print(triv2)

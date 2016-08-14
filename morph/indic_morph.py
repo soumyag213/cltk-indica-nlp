@@ -1,5 +1,5 @@
 
-import codecs, sys, string, re
+import codecs, sys, string, re, unittest
 
 try:
     import morfessor
@@ -42,9 +42,6 @@ INDIC_RESOURCES_PATH=''
 
 indian_punctuation_pattern = re.compile('(['+string.punctuation+'\u0964\u0965'+'])')
 
-def indian_punctuation_tokenize_regex(input_str):
-    tok_str = indian_punctuation_pattern.sub(r' \1 ',input_str.replace('\t',' '))
-    return re.sub(r'[ ]+',u' ',tok_str).strip(' ').split(' ')
 
 class MorphAnalyzerI(object):
     """
@@ -62,36 +59,42 @@ class UnsupervisedMorphAnalyzer(MorphAnalyzerI):
     Unsupervised Morphological analyser built using Morfessor 2.0
     """
 
-    def __init__(self,lang,add_marker=False): 
-        self.lang= lang
+    def __init__(self,add_marker=False):
         self.add_marker=add_marker
 
+    def indian_punctuation_tokenize_regex(input_str):
+        tok_str = indian_punctuation_pattern.sub(r' \1 ', input_str.replace('\t', ' '))
+        return re.sub(r'[ ]+', u' ', tok_str).strip(' ').split(' ')
+
+    def _morfessor_model(self, word, lang):
         io = morfessor.MorfessorIO()
-        self._morfessor_model=io.read_any_model(INDIC_RESOURCES_PATH+'/morph/morfessor/{}.model'.format(lang))
+        morfessor_model=io.read_any_model(INDIC_RESOURCES_PATH+'/morph/morfessor/{}.model'.format(lang))
+        return morfessor_model.viterbi_segment(word)
 
-        self._script_range_pat='^[{}-{}]+$'.format(chr(SCRIPT_RANGES[lang][0]),chr(SCRIPT_RANGES[lang][1]))
-        self._script_check_re=re.compile(self._script_range_pat)
+    def _script_check_re(self, word, lang):
+        self._script_range_pat = '^[{}-{}]+$'.format(chr(SCRIPT_RANGES[lang][0]), chr(SCRIPT_RANGES[lang][1]))
+        return re.compile(self._script_range_pat).match(word)
 
-    def _contains_number(self,text):
-        if self.lang in SCRIPT_RANGES:
+    def _contains_number(self,text, lang):
+        if lang in SCRIPT_RANGES:
             for c in text: 
-                offset=ord(c)-SCRIPT_RANGES[self.lang][0]
+                offset=ord(c)-SCRIPT_RANGES[lang][0]
                 if offset >=NUMERIC_OFFSET_START and offset <=NUMERIC_OFFSET_END:
                     return True  
         return False     
 
-    def _morphanalysis_needed(self,word):
-        return self._script_check_re.match(word) and not self._contains_number(word)
+    def _morphanalysis_needed(self,word, lang):
+        return UnsupervisedMorphAnalyzer._script_check_re(self, word, lang) and not UnsupervisedMorphAnalyzer._contains_number(self, word, lang)
 
-    def morph_analyze(self,word):
+    def morph_analyze(self,word, lang):
         """
         Morphanalyzes a single word and returns a list of component morphemes
 
         @param word: string input word 
         """
         m_list=[]
-        if self._morphanalysis_needed(word): 
-            val=self._morfessor_model.viterbi_segment(word)
+        if UnsupervisedMorphAnalyzer._morphanalysis_needed(self, word, lang):
+            val=UnsupervisedMorphAnalyzer._morfessor_model(self, word, lang)
             m_list=val[0]
             if self.add_marker:
                 m_list= [ u'{}_S_'.format(m) if i>0 else u'{}_R_'.format(m)  for i,m in enumerate(m_list)]
@@ -109,7 +112,7 @@ class UnsupervisedMorphAnalyzer(MorphAnalyzerI):
         #return m_list
     
 
-    def morph_analyze_document(self,tokens):
+    def morph_analyze_document(self,word, lang):
         """
         Morphanalyzes a document, represented as a list of tokens
         Each word  is morphanalyzed and result is a list of morphemes constituting the document 
@@ -118,10 +121,10 @@ class UnsupervisedMorphAnalyzer(MorphAnalyzerI):
 
         @return seuqence of morphemes 
         """
-
+        tokens = UnsupervisedMorphAnalyzer.indian_punctuation_tokenize_regex(word)
         out_tokens=[]
         for token in tokens: 
-            morphs=self.morph_analyze(token)
+            morphs=UnsupervisedMorphAnalyzer.morph_analyze(self,token, lang)
             out_tokens.extend(morphs)
         return out_tokens    
 
@@ -135,8 +138,7 @@ class UnsupervisedMorphAnalyzer(MorphAnalyzerI):
         #        if self.add_marker:
         #            token=u'{}_E_'.format(token)
         #        out_tokens.append(token)
-        #return out_tokens    
-
+        #return out_tokens
 
 if __name__ == '__main__': 
 
@@ -146,8 +148,13 @@ if __name__ == '__main__':
     input_string = "प्रेमचन्द का जन्म ३१ जुलाई सन् १८८० को बनारस शहर।"
 
     language = LANGUAGE_NAME_TO_CODE[language]
-    analyzer=UnsupervisedMorphAnalyzer(language,add_marker)
-    morph_tokens = analyzer.morph_analyze_document(indian_punctuation_tokenize_regex(input_string))
-    print (morph_tokens)
+    analyzer = UnsupervisedMorphAnalyzer(add_marker)
+
+    morph_word = analyzer.morph_analyze("प्रेमचन्द", language)
+    print (morph_word)
+
+    morph_tokens = analyzer.morph_analyze_document(input_string, language)
+    print(morph_tokens)
+
 
 
